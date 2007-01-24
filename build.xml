@@ -40,7 +40,9 @@
 	</target>
 
 	<target name="jar" depends="clean,compile,doc">
-		<jar jarfile="Ant-PropertyClass.jar" basedir="bin" includes="**/*.class"/>
+		<jar jarfile="Ant-PropertyClass.jar" basedir="bin" includes="**/*.class">
+			<fileset file="LICENSE"/>
+		</jar>
 	</target>
 	
 </project>
