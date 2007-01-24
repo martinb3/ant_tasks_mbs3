@@ -1,0 +1,17 @@
+<project name="test" default="test">
+	<taskdef 
+		name="propertyClass" 
+		classname="org.mbs3.ant.tasks.PropertyClass"
+		classpath="bin"
+	/>
+	
+	<target name="test">
+		<propertyClass 
+			inputfile="sample.properties"
+			destdir="src" 
+			classname="SampleClass"
+			packageName="org.mbs3.ant.tests"
+		/>
+	</target>
+	
+</project>

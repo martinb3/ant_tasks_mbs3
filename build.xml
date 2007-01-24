@@ -1,0 +1,29 @@
+<project name="build" default="compile">
+	<target name="compile" description="compile the source" depends="init">
+		<javac srcdir="src" destdir="bin" target="1.5" fork="true"/>
+	</target>
+	
+	<target name="clean" description="clean up">
+		<delete dir="bin" />
+		<delete dir="doc" />
+		<delete file="Ant-PropertyClass.jar"/>
+	</target>
+
+	<target name="init">
+		<mkdir dir="bin" />
+		<mkdir dir="doc" />		
+	</target>
+	
+	<target name="doc">
+		<javadoc
+			sourcepath="src"
+			destdir="doc"
+			packagenames="org.mbs3.ant.tasks"
+		/>
+	</target>
+
+	<target name="jar" depends="clean,compile,doc">
+		<jar jarfile="Ant-PropertyClass.jar" basedir="bin" includes="**/*.class"/>
+	</target>
+	
+</project>
