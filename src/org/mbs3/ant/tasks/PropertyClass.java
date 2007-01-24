@@ -89,7 +89,7 @@ public class PropertyClass extends Task {
 		
 		// if we aren't given a class name, halt and complain
 		if(this.className != null)
-			output.append("class " + this.className + " {\n");
+			output.append("public class " + this.className + " {\n");
 		else
 			throw new BuildException("Cannot write class without a class name");
 
