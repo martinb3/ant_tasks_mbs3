@@ -24,7 +24,7 @@
 	
 	<target name="test">
 		<propertyClass 
-			inputfile="sample.properties"
+			inputfile="src/org/mbs3/ant/tests/sample.properties"
 			destdir="src" 
 			classname="SampleClass"
 			packageName="org.mbs3.ant.tests"
