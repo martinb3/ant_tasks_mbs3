@@ -18,7 +18,10 @@ package org.mbs3.ant.tasks;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.types.FileSet;
+import org.apache.tools.ant.DirectoryScanner;
 
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Enumeration;
 
@@ -67,8 +70,14 @@ import java.io.IOException;
 public class PropertyClass extends Task {
 
 	File destDir, inputFile;
+	ArrayList<FileSet> fileSets;
 	String className,packageName;
 	boolean convertToUpper = false;
+	
+	public PropertyClass()
+	{
+		this.fileSets = new ArrayList<FileSet>();
+	}
 
 	public void execute() {
 		// add the package name and figure out the real destination, if no package this will still succeed 
@@ -96,7 +105,29 @@ public class PropertyClass extends Task {
 		// attempt to load the properties file we're going to use for input
 		Properties p = new Properties();
 		try {
-			p.load(new BufferedInputStream(new FileInputStream(inputFile)));
+			if((inputFile == null || inputFile.canRead()) && (fileSets == null || fileSets.isEmpty()))
+				throw new BuildException("You need to supply some readable property files to this task");
+			
+			if(inputFile != null && inputFile.canRead())
+				p.load(new BufferedInputStream(new FileInputStream(inputFile)));
+			
+			if(fileSets != null && !fileSets.isEmpty())
+			{
+				log(fileSets.size() + " file sets included",Project.MSG_INFO);
+				for(FileSet fs : fileSets)
+				{
+					
+					DirectoryScanner ds = fs.getDirectoryScanner(); ds.scan();
+					log("Included " + ds.getIncludedFilesCount() + " files", Project.MSG_INFO);
+					
+					String fileNames [] = ds.getIncludedFiles();
+					for(String fileName : fileNames)
+					{
+						log("Stuff: " + fileName, Project.MSG_INFO);
+						p.load(new BufferedInputStream(new FileInputStream(new File(fileName))));
+					}
+				}
+			}
 		} catch (Exception ex) {
 			throw new BuildException(ex);
 		}
@@ -171,6 +202,11 @@ public class PropertyClass extends Task {
 
 	public void setConverttoupper(boolean b) {
 		this.convertToUpper = b;
+	}
+	
+	public void addFileSet(FileSet fileSet)
+	{
+		this.fileSets.add(fileSet);
 	}
 
 }
