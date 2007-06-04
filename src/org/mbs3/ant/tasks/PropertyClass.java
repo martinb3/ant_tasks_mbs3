@@ -80,6 +80,7 @@ public class PropertyClass extends Task {
 	}
 
 	public void execute() {
+		
 		// add the package name and figure out the real destination, if no package this will still succeed 
 		File realDestDir = new File(destDir.getAbsolutePath() + File.separator + packageName.replace(".", File.separator));
 		
@@ -88,24 +89,22 @@ public class PropertyClass extends Task {
 			if(realDestDir.mkdirs())
 				log("Created directory " + realDestDir.getAbsolutePath());
 		} catch (Exception ex) {
+			log("Couldn't create directories and files in the path that the final file will be written",Project.MSG_ERR);
 			throw new BuildException(ex);
 		}
 		
 		// create the output file from the real dest dir and the class name and .java
 		File realOutputFile = new File(realDestDir.getAbsolutePath() + File.separator + this.className +".java");
-
-		// decide if we need to update the file -- compare timestamps on properties file and generated source
-		if(realOutputFile.canRead() && inputFile.lastModified() <= realOutputFile.lastModified())
-		{
-			// properties file was modified before or on the time that the source file was made
-			// so we don't need to act any further -- the source file should be good for now
+		if(!realOutputFile.canRead())
+			throw new BuildException("Cannot read destination file");
+		
+		if(!filesUpdated(realOutputFile))
 			return;
-		}
 		
 		// attempt to load the properties file we're going to use for input
 		Properties p = new Properties();
 		try {
-			if((inputFile == null || inputFile.canRead()) && (fileSets == null || fileSets.isEmpty()))
+			if((inputFile == null || !inputFile.canRead()) && (fileSets == null || fileSets.isEmpty()))
 				throw new BuildException("You need to supply some readable property files to this task");
 			
 			if(inputFile != null && inputFile.canRead())
@@ -113,22 +112,18 @@ public class PropertyClass extends Task {
 			
 			if(fileSets != null && !fileSets.isEmpty())
 			{
-				log(fileSets.size() + " file sets included",Project.MSG_INFO);
 				for(FileSet fs : fileSets)
 				{
 					
 					DirectoryScanner ds = fs.getDirectoryScanner(); ds.scan();
-					log("Included " + ds.getIncludedFilesCount() + " files", Project.MSG_INFO);
 					
 					String fileNames [] = ds.getIncludedFiles();
 					for(String fileName : fileNames)
-					{
-						log("Stuff: " + fileName, Project.MSG_INFO);
-						p.load(new BufferedInputStream(new FileInputStream(new File(fileName))));
-					}
+						p.load(new BufferedInputStream(new FileInputStream(new File(fs.getDir().getAbsolutePath() + File.separatorChar + fileName))));
 				}
 			}
 		} catch (Exception ex) {
+			log("Couldn't load and read the property files",Project.MSG_ERR);
 			throw new BuildException(ex);
 		}
 
@@ -209,4 +204,34 @@ public class PropertyClass extends Task {
 		this.fileSets.add(fileSet);
 	}
 
+	private boolean filesUpdated(File realOutputFile)
+	{
+		// decide if we need to update the file -- compare timestamps on properties file and generated source
+		if(inputFile != null && inputFile.lastModified() > realOutputFile.lastModified())
+		{
+			// properties file was modified before or on the time that the source file was made
+			// so we don't need to act any further -- the source file should be good for now
+			return true;
+		}
+		
+		// check the filesets for the same thing as above
+		if(fileSets != null && !fileSets.isEmpty())
+		{
+			for(FileSet fs : fileSets)
+			{
+				
+				DirectoryScanner ds = fs.getDirectoryScanner(); ds.scan();
+				
+				String fileNames [] = ds.getIncludedFiles();
+				for(String fileName : fileNames)
+				{
+					File f = new File(fs.getDir().getAbsolutePath() + File.separatorChar + fileName);
+					if(f.lastModified() > realOutputFile.lastModified())
+						return true;
+				}
+			}
+		}
+
+		return false;
+	}
 }
