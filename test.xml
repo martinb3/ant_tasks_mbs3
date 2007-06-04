@@ -31,4 +31,16 @@
 		/>
 	</target>
 	
+	<target name="test12">
+		<propertyClass 
+			destdir="src" 
+			classname="SampleClass12"
+			packageName="org.mbs3.ant.tests">
+
+			<fileset file="sample1.properties"/>
+			<fileset file="sample2.properties"/>				
+			
+		</propertyClass>
+	</target>
+	
 </project>
